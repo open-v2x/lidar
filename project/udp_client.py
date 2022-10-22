@@ -30,7 +30,7 @@ if __name__ == '__main__':
                         udpClientSocket.sendto(size, ADDRESS)
                     time.sleep(0.0005)
         except Exception as e:
-            pass
+            print(e)
 
         while redis_conn.llen('celery'):
             print('休息~', flush=True)

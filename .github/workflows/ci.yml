@@ -1,0 +1,58 @@
+name: ci
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      - name: Login to DockerHub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build and push
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          platforms: linux/amd64
+          push: true
+          tags: openv2x/lidar:latest
+          build-args: |
+            GIT_BRANCH=${{ github.ref_name }}
+            REPO_URL=https://github.com/open-v2x/lidar
+            GIT_COMMIT=${{ github.sha }}
+  ssh:
+    needs: docker
+    runs-on: ubuntu-latest
+    steps:
+      - name: apply to cicd environment
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.AIO_MASTER_HOST }}
+          username: ${{ secrets.AIO_MASTER_USERNAME }}
+          key: ${{ secrets.AIO_MASTER_KEY }}
+          port: ${{ secrets.AIO_MASTER_PORT }}
+          script: |
+            set -e
+
+            for i in redis udp_client udp_server celery_worker websocket;
+            do
+              docker stop $i 2>/dev/null || true
+              docker rm $i 2>/dev/null || true
+            done
+
+            docker pull openv2x/lidar:latest
+            rm -f docker-compose.yml && wget https://openv2x.oss-ap-southeast-1.aliyuncs.com/deploy/lidar/docker-compose.yml
+            docker compose up -d
+
+

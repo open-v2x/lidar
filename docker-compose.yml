@@ -7,8 +7,6 @@ services:
     container_name: websocket
     network_mode: host
     command: uvicorn main:app --host 0.0.0.0 --port 8000
-    volumes:
-      - ./project:/lidar
     environment:
       - redis_password=${OPENV2X_REDIS_ROOT}
       - host=127.0.0.1
@@ -20,8 +18,6 @@ services:
     container_name: celery_worker
     command: celery worker --app=worker.celery -l info
     network_mode: host
-    volumes:
-      - ./project:/lidar
     environment:
       - CELERY_BROKER_URL=redis://:${OPENV2X_REDIS_ROOT}@127.0.0.1:6379/0
       - host=127.0.0.1
@@ -35,8 +31,6 @@ services:
     container_name: udp_server
     command: python3 udp_server.py
     network_mode: host
-    volumes:
-      - ./project:/lidar
     environment:
       - host=127.0.0.1
       - redis_password=${OPENV2X_REDIS_ROOT}
@@ -52,8 +46,6 @@ services:
     environment:
       - udp_host=127.0.0.1
       - host=127.0.0.1
-    volumes:
-      - ./project:/lidar
     depends_on:
       - udp_server
 
