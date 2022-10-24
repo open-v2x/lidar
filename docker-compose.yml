@@ -32,6 +32,7 @@ services:
     command: python3 udp_server.py
     network_mode: host
     environment:
+      - CELERY_BROKER_URL=redis://:${OPENV2X_REDIS_ROOT}@127.0.0.1:6379/0
       - host=127.0.0.1
       - redis_password=${OPENV2X_REDIS_ROOT}
     depends_on:
@@ -46,6 +47,7 @@ services:
     environment:
       - udp_host=127.0.0.1
       - host=127.0.0.1
+      - redis_password=${OPENV2X_REDIS_ROOT}
     depends_on:
       - udp_server
 
