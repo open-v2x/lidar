@@ -52,8 +52,8 @@ async def websocket_endpoint(websocket: WebSocket, ip: str):
                     break
                 data = redis_conn.get(key)
                 await asyncio.sleep(0.0001)
-            await manager.send_personal_message(json.loads(data), websocket)
             redis_conn.delete(key)
+            await manager.send_personal_message(json.loads(data), websocket)
             await asyncio.sleep(0.0001)
         except WebSocketDisconnect:
             manager.disconnect(websocket)
