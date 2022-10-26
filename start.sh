@@ -16,7 +16,7 @@
 
 
 
-for i in redis udp_client udp_server celery_worker websocket;
+for i in lidar_redis udp_client udp_server celery_worker websocket;
 do
   docker stop $i 2>/dev/null || true
   docker rm $i 2>/dev/null || true

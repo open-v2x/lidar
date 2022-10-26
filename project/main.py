@@ -1,8 +1,11 @@
 import asyncio
 import json
-from typing import List
+from typing import Dict
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+import uvicorn
+from fastapi import FastAPI, WebSocket
+from starlette.websockets import WebSocketDisconnect
+from websockets.exceptions import ConnectionClosedError, ConnectionClosedOK
 
 from redis_connect import redis_conn
 
@@ -11,22 +14,29 @@ app = FastAPI()
 
 class ConnectionManager:
     def __init__(self):
-        self.active_connections: List[WebSocket] = []
+        self.active_connections: Dict[str:list] = {}
 
-    async def connect(self, websocket: WebSocket):
+    async def connect(self, websocket: WebSocket, ip: str):
         await websocket.accept()
-        self.active_connections.append(websocket)
+        if ip not in self.active_connections:
+            self.active_connections[ip] = []
 
-    def disconnect(self, websocket: WebSocket):
-        if websocket in self.active_connections:
-            self.active_connections.remove(websocket)
+        self.active_connections[ip].append(websocket)
+
+    def disconnect(self, websocket: WebSocket, ip: str):
+        if ip in self.active_connections:
+            if websocket in self.active_connections[ip]:
+                self.active_connections[ip].remove(websocket)
 
     async def send_personal_message(self, message: list, websocket: WebSocket):
         await websocket.send_json(message)
 
-    async def broadcast(self, message):
-        for connection in self.active_connections:
-            await connection.send_json(message)
+    async def broadcast(self, message, ip: str):
+        for connection in self.active_connections[ip]:
+            try:
+                await connection.send_json(message)
+            except (ConnectionClosedError, ConnectionClosedOK, WebSocketDisconnect):
+                self.disconnect(connection, ip)
 
 
 manager = ConnectionManager()
@@ -39,7 +49,7 @@ async def get():
 
 @app.websocket("/ws/{ip}")
 async def websocket_endpoint(websocket: WebSocket, ip: str):
-    await manager.connect(websocket)
+    await manager.connect(websocket, ip)
     while True:
         try:
             key = redis_conn.rpop(ip)
@@ -53,7 +63,12 @@ async def websocket_endpoint(websocket: WebSocket, ip: str):
                 data = redis_conn.get(key)
                 await asyncio.sleep(0.0001)
             redis_conn.delete(key)
-            await manager.send_personal_message(json.loads(data), websocket)
+            await manager.broadcast(json.loads(data), ip)
             await asyncio.sleep(0.0001)
-        except WebSocketDisconnect:
-            manager.disconnect(websocket)
+        except (ConnectionClosedError, ConnectionClosedOK, WebSocketDisconnect):
+            manager.disconnect(websocket, ip)
+            return
+
+
+if __name__ == '__main__':
+    uvicorn.run(app=app)
