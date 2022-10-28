@@ -2,19 +2,17 @@ import asyncio
 import json
 from typing import Dict
 
-import uvicorn
 from fastapi import FastAPI, WebSocket
+from redis_connect import redis_conn
 from starlette.websockets import WebSocketDisconnect
 from websockets.exceptions import ConnectionClosedError, ConnectionClosedOK
-
-from redis_connect import redis_conn
 
 app = FastAPI()
 
 
 class ConnectionManager:
     def __init__(self):
-        self.active_connections: Dict[str:list] = {}
+        self.active_connections: Dict[str, list] = {}
 
     async def connect(self, websocket: WebSocket, ip: str):
         await websocket.accept()
@@ -44,7 +42,7 @@ manager = ConnectionManager()
 
 @app.get("/")
 async def get():
-    return {'test': 'test'}
+    return {"test": "test"}
 
 
 @app.websocket("/ws/{ip}")
@@ -68,7 +66,3 @@ async def websocket_endpoint(websocket: WebSocket, ip: str):
         except (ConnectionClosedError, ConnectionClosedOK, WebSocketDisconnect):
             manager.disconnect(websocket, ip)
             return
-
-
-if __name__ == '__main__':
-    uvicorn.run(app=app)

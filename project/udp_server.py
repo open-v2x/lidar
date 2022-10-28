@@ -1,17 +1,18 @@
-import socket
-from multiprocessing import Process, Queue
-import time
 import asyncio
+import multiprocessing
+import socket
+import time
+from multiprocessing import Process, Queue
+from typing import Dict
 
 from redis_connect import redis_conn
 from worker import parses
 
-queue = Queue()
-data_dict = {}
+queue: multiprocessing.Queue = Queue()
+data_dict: Dict[str, list] = {}
 
 
 class MyUDP:
-
     def __init__(self, host, port):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sock.bind((host, port))
@@ -36,7 +37,7 @@ def deal_parse(addr, data):
         data_list = data_dict.get(ip)
         key = time.time()
         if redis_conn.llen(ip) + 1 > 1500:
-            print('超过队列', flush=True)
+            print("超过队列", flush=True)
             redis_conn.rpop(ip)
         redis_conn.lpush(ip, key)
         parses.apply_async((data_list, key))
@@ -51,7 +52,7 @@ def deal_handle(queue):
                 continue
             deal_parse(addr, data)
         except Exception as e:
-            print('deal error', e, flush=True)
+            print("deal error", e, flush=True)
 
 
 async def read_data(sock, queue):
@@ -79,8 +80,8 @@ def udp_connect(host, port, queue):
             loop.close()
 
 
-if __name__ == '__main__':
-    host = '0.0.0.0'
+if __name__ == "__main__":
+    host = "0.0.0.0"
     port = 57142
     udp_process = Process(target=udp_connect, args=(host, port, queue))
     deal_process = Process(target=deal_handle, args=(queue,))

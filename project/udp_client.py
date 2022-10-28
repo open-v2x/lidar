@@ -1,26 +1,26 @@
 import os
 import time
-from socket import *
+from socket import AF_INET, SOCK_DGRAM, socket
 
 from redis_connect import redis_conn
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
-    HOST = os.environ.get('udp_host', '127.0.0.1')
+    HOST = os.environ.get("udp_host", "127.0.0.1")
     PORT = 57142
 
     ADDRESS = (HOST, PORT)
 
     udpClientSocket = socket(AF_INET, SOCK_DGRAM)
     while True:
-        print('开始发送~', flush=True)
-        udpClientSocket.sendto(b'1111', ADDRESS)
+        print("开始发送~", flush=True)
+        udpClientSocket.sendto(b"1111", ADDRESS)
         try:
-            with open("lid23D.cap", "rb")as f_r:
+            with open("lid23D.cap", "rb") as f_r:
                 other_len = 8  # 文件头
                 header_len = 96  # 以太头
                 data_length = 1340  # 一个数据包
-                size = True
+                size = b"1111"
                 f_r.read(other_len)
                 while size:
                     f_r.read(header_len)
@@ -29,9 +29,10 @@ if __name__ == '__main__':
                     if size:
                         udpClientSocket.sendto(size, ADDRESS)
                     time.sleep(0.0005)
+                    print(size[:10])
         except Exception as e:
             print(e)
 
-        while redis_conn.llen('celery'):
-            print('休息~', flush=True)
+        while redis_conn.llen("celery"):
+            print("休息~", flush=True)
             time.sleep(1)
