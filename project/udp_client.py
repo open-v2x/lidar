@@ -29,7 +29,6 @@ if __name__ == "__main__":
                     if size:
                         udpClientSocket.sendto(size, ADDRESS)
                     time.sleep(0.0005)
-                    print(size[:10])
         except Exception as e:
             print(e)
 
