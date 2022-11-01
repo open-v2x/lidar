@@ -1,5 +1,6 @@
 import asyncio
 import json
+import time
 from typing import Dict
 
 from fastapi import FastAPI, WebSocket
@@ -55,14 +56,16 @@ async def websocket_endpoint(websocket: WebSocket, ip: str):
                 await asyncio.sleep(0.0001)
                 continue
             data = redis_conn.get(key)
+            t = time.time()
             while True:
-                if data:
+                if data or (time.time() - t) > 5:
                     break
                 data = redis_conn.get(key)
                 await asyncio.sleep(0.0001)
+            if not data:
+                continue
             redis_conn.delete(key)
             await manager.broadcast(json.loads(data), ip)
             await asyncio.sleep(0.0001)
         except (ConnectionClosedError, ConnectionClosedOK, WebSocketDisconnect):
             manager.disconnect(websocket, ip)
-            return

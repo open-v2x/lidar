@@ -107,11 +107,13 @@ def parse(data, start, values):
         # 解析激光束距离
         distance = get_value(data[4 * i + start + 4], data[4 * i + start + 5]) * 4
         # 分别求 x,y,z 方向的距离
-        z = round(float(distance * math.sin(omega)))
-        if abs(z) >= 4100:
-            values.append(round(float(distance * math.cos(omega) * math.sin(alpha + delta))))
-            values.append(round(float(distance * math.cos(omega) * math.cos(alpha + delta))))
-            values.append(round(float(distance * math.sin(omega))))
+        x = round(float(distance * math.cos(omega) * math.sin(alpha + delta)))
+        y = round(float(distance * math.cos(omega) * math.cos(alpha + delta)))
+        z = abs(round(float(distance * math.sin(omega))))
+        if z < 4100 and (x * x + y * y) >= 25000000:
+            values.append(x)
+            values.append(y)
+            values.append(z)
 
 
 @celery.task
