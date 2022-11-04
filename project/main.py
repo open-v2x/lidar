@@ -51,6 +51,8 @@ async def websocket_endpoint(websocket: WebSocket, ip: str):
     await manager.connect(websocket, ip)
     while True:
         try:
+            if not manager.active_connections[ip]:
+                break
             key = redis_conn.rpop(ip)
             if not key:
                 await asyncio.sleep(0.0001)
@@ -58,7 +60,7 @@ async def websocket_endpoint(websocket: WebSocket, ip: str):
             data = redis_conn.get(key)
             t = time.time()
             while True:
-                if data or (time.time() - t) > 5:
+                if data or (time.time() - t) > 10:
                     break
                 data = redis_conn.get(key)
                 await asyncio.sleep(0.0001)
