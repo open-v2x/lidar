@@ -1,9 +1,9 @@
-import asyncio
 import json
 import time
 from typing import Dict
 
 from fastapi import FastAPI, WebSocket
+from fastapi_utils.tasks import repeat_every
 from redis_connect import redis_conn
 from starlette.websockets import WebSocketDisconnect
 from websockets.exceptions import ConnectionClosedError, ConnectionClosedOK
@@ -49,13 +49,20 @@ async def get():
 @app.websocket("/ws/{ip}")
 async def websocket_endpoint(websocket: WebSocket, ip: str):
     await manager.connect(websocket, ip)
-    while True:
-        try:
-            if not manager.active_connections[ip]:
-                break
+    try:
+        while True:
+            await websocket.receive_text()
+    except WebSocketDisconnect:
+        manager.disconnect(websocket, ip)
+
+
+@app.on_event("startup")
+@repeat_every(seconds=0.01)
+async def send():
+    try:
+        for ip in manager.active_connections.keys():
             key = redis_conn.rpop(ip)
             if not key:
-                await asyncio.sleep(0.0001)
                 continue
             data = redis_conn.get(key)
             t = time.time()
@@ -63,11 +70,9 @@ async def websocket_endpoint(websocket: WebSocket, ip: str):
                 if data or (time.time() - t) > 10:
                     break
                 data = redis_conn.get(key)
-                await asyncio.sleep(0.0001)
             if not data:
                 continue
             redis_conn.delete(key)
             await manager.broadcast(json.loads(data), ip)
-            await asyncio.sleep(0.0001)
-        except (ConnectionClosedError, ConnectionClosedOK, WebSocketDisconnect):
-            manager.disconnect(websocket, ip)
+    except Exception as e:
+        print(e)
