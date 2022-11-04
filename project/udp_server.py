@@ -36,7 +36,7 @@ def deal_parse(addr, data):
     if len(data_dict[ip]) == 180:
         data_list = data_dict.get(ip)
         key = time.time()
-        if redis_conn.llen(ip) + 1 > 500:
+        if redis_conn.llen(ip) + 1 > 1500:
             print("超过队列", flush=True)
             redis_conn.rpop(ip)
         redis_conn.lpush(ip, key)
