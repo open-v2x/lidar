@@ -31,6 +31,26 @@ jobs:
             GIT_BRANCH=${{ github.ref_name }}
             REPO_URL=https://github.com/open-v2x/lidar
             GIT_COMMIT=${{ github.sha }}
+
+  acr:
+    needs: docker
+    runs-on: ubuntu-latest
+    steps:
+      - name: sync image to ACR
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.FQ_HOST }}
+          username: ${{ secrets.FQ_USERNAME }}
+          key: ${{ secrets.FQ_KEY }}
+          port: ${{ secrets.FQ_PORT }}
+          script: |
+            set -e
+
+            (docker images | grep none | awk '{print $3}' | xargs -I{} docker rmi -f {}) || true
+            docker pull openv2x/lidar:latest
+            docker tag openv2x/lidar:latest registry.cn-shanghai.aliyuncs.com/openv2x/lidar:latest
+            docker push registry.cn-shanghai.aliyuncs.com/openv2x/lidar:latest
+
   ssh:
     needs: docker
     runs-on: ubuntu-latest
@@ -54,9 +74,3 @@ jobs:
             docker pull openv2x/lidar:latest
             rm -f docker-compose.yml && wget https://openv2x.oss-ap-southeast-1.aliyuncs.com/deploy/lidar/docker-compose.yml
             docker compose up -d
-
-            docker tag openv2x/lidar:latest registry.cn-shanghai.aliyuncs.com/openv2x/lidar:latest
-            docker push registry.cn-shanghai.aliyuncs.com/openv2x/lidar:latest
-
-
-
