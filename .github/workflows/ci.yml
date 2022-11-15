@@ -52,7 +52,7 @@ jobs:
             docker push registry.cn-shanghai.aliyuncs.com/openv2x/lidar:latest
 
   ssh:
-    needs: docker
+    needs: acr
     runs-on: ubuntu-latest
     steps:
       - name: apply to cicd environment
