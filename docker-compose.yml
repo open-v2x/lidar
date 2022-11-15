@@ -11,8 +11,6 @@ services:
     environment:
       - redis_password=${OPENV2X_REDIS_ROOT}
       - host=127.0.0.1
-    depends_on:
-      - redis
 
   worker:
     image: openv2x/lidar:latest
@@ -21,12 +19,11 @@ services:
     network_mode: host
     restart: always
     environment:
-      - CELERY_BROKER_URL=redis://:${OPENV2X_REDIS_ROOT}@127.0.0.1:6378/0
+      - CELERY_BROKER_URL=redis://:${OPENV2X_REDIS_ROOT}@127.0.0.1:6379/0
       - host=127.0.0.1
       - redis_password=${OPENV2X_REDIS_ROOT}
     depends_on:
       - websocket
-      - redis
 
   udp_server:
     image: openv2x/lidar:latest
@@ -35,11 +32,10 @@ services:
     network_mode: host
     restart: always
     environment:
-      - CELERY_BROKER_URL=redis://:${OPENV2X_REDIS_ROOT}@127.0.0.1:6378/0
+      - CELERY_BROKER_URL=redis://:${OPENV2X_REDIS_ROOT}@127.0.0.1:6379/0
       - host=127.0.0.1
       - redis_password=${OPENV2X_REDIS_ROOT}
     depends_on:
-      - redis
       - worker
 
   udp_client:
@@ -54,12 +50,4 @@ services:
       - redis_password=${OPENV2X_REDIS_ROOT}
     depends_on:
       - udp_server
-
-  redis:
-    image: redis:6.2.4-alpine
-    container_name: lidar_redis
-    restart: always
-    command: redis-server --requirepass ${OPENV2X_REDIS_ROOT}
-    ports:
-      - 6378:6379
 
