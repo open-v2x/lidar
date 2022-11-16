@@ -3,7 +3,7 @@ name: ci
 on:
   push:
     branches:
-      - master
+      - beihai
 
 jobs:
   docker:
@@ -26,7 +26,7 @@ jobs:
           context: .
           platforms: linux/amd64
           push: true
-          tags: openv2x/lidar:latest
+          tags: openv2x/lidar:beihai
           build-args: |
             GIT_BRANCH=${{ github.ref_name }}
             REPO_URL=https://github.com/open-v2x/lidar
@@ -47,9 +47,9 @@ jobs:
             set -e
 
             (docker images | grep none | awk '{print $3}' | xargs -I{} docker rmi -f {}) || true
-            docker pull openv2x/lidar:latest
-            docker tag openv2x/lidar:latest registry.cn-shanghai.aliyuncs.com/openv2x/lidar:latest
-            docker push registry.cn-shanghai.aliyuncs.com/openv2x/lidar:latest
+            docker pull openv2x/lidar:beihai
+            docker tag openv2x/lidar:beihai registry.cn-shanghai.aliyuncs.com/openv2x/lidar:beihai
+            docker push registry.cn-shanghai.aliyuncs.com/openv2x/lidar:beihai
 
   ssh:
     needs: acr
@@ -58,19 +58,14 @@ jobs:
       - name: apply to cicd environment
         uses: appleboy/ssh-action@master
         with:
-          host: ${{ secrets.AIO_MASTER_HOST }}
-          username: ${{ secrets.AIO_MASTER_USERNAME }}
-          key: ${{ secrets.AIO_MASTER_KEY }}
-          port: ${{ secrets.AIO_MASTER_PORT }}
+          host: ${{ secrets.AIO_ALBANY_HOST }}
+          username: ${{ secrets.AIO_ALBANY_USERNAME }}
+          key: ${{ secrets.AIO_ALBANY_KEY }}
+          port: ${{ secrets.AIO_ALBANY_PORT }}
           script: |
             set -e
 
-            for i in lidar_redis udp_client udp_server celery_worker websocket;
-            do
-              docker stop $i 2>/dev/null || true
-              docker rm $i 2>/dev/null || true
-            done
-
-            docker pull openv2x/lidar:latest
-            rm -f docker-compose.yml && wget https://openv2x.oss-ap-southeast-1.aliyuncs.com/deploy/lidar/docker-compose.yml
-            docker compose up -d
+            rm -rf openv2x-aio-beihai.tar.gz && wget https://openv2x.oss-ap-southeast-1.aliyuncs.com/deploy/beihai/openv2x-aio-beihai.tar.gz
+            rm -rf src && tar zxvf openv2x-aio-beihai.tar.gz
+            cd src
+            sh install.sh
