@@ -57,7 +57,7 @@ async def websocket_endpoint(websocket: WebSocket, ip: str):
 
 
 @app.on_event("startup")
-@repeat_every(seconds=0.01)
+@repeat_every(seconds=0.1)
 async def send():
     try:
         for ip in manager.active_connections.keys():
