@@ -1,5 +1,15 @@
 FROM ubuntu:22.04
 
+ARG GIT_BRANCH
+ARG GIT_COMMIT
+ARG RELEASE_VERSION
+ARG REPO_URL
+
+LABEL lidar.build_branch=${GIT_BRANCH} \
+      lidar.build_commit=${GIT_COMMIT} \
+      lidar.release_version=${RELEASE_VERSION} \
+      lidar.repo_url=${REPO_URL}
+
 WORKDIR /lidar
 
 ENV PYTHONDONTWRITEBYTECODE 1
