@@ -1,8 +1,7 @@
 import os
 import time
 from socket import AF_INET, SOCK_DGRAM, socket
-
-from redis_connect import redis_conn
+from typing import List
 
 if __name__ == "__main__":
 
@@ -10,28 +9,22 @@ if __name__ == "__main__":
     PORT = 57142
 
     ADDRESS = (HOST, PORT)
-
-    udpClientSocket = socket(AF_INET, SOCK_DGRAM)
+    udp_client = socket(AF_INET, SOCK_DGRAM)
+    file_list = os.listdir("velo")
+    file_list.sort(key=lambda x: int(x.split(".")[0]))
+    data: List = [[] for _ in range(392)]
+    for i, filename in enumerate(file_list):
+        with open(f"velo/{filename}", "rb") as f:
+            for _ in range(180):
+                data[i].append(f.read(1024 * 10))
     while True:
-        print("开始发送~", flush=True)
-        udpClientSocket.sendto(b"1111", ADDRESS)
         try:
-            with open("lid23D.cap", "rb") as f_r:
-                other_len = 8  # 文件头
-                header_len = 96  # 以太头
-                data_length = 1340  # 一个数据包
-                size = b"1111"
-                f_r.read(other_len)
-                while size:
-                    f_r.read(header_len)
-                    size = f_r.read(data_length)
-                    # 发送数据
-                    if size:
-                        udpClientSocket.sendto(size, ADDRESS)
-                    time.sleep(0.0005)
+            for udp_data_list in data:
+                for udp_data in udp_data_list:
+                    udp_client.sendto(udp_data, ADDRESS)
+                    time.sleep(0.001)
+                time.sleep(0.01)
         except Exception as e:
             print(e)
-
-        while redis_conn.llen("celery"):
-            print("休息~", flush=True)
-            time.sleep(1)
+        time.sleep(2)
+        udp_client.sendto(b"clear", ADDRESS)

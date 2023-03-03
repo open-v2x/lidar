@@ -16,7 +16,7 @@
 
 
 
-for i in lidar_redis udp_client udp_server celery_worker websocket;
+for i in udp_client udp_server celery_worker lidar_websocket;
 do
   docker stop $i 2>/dev/null || true
   docker rm $i 2>/dev/null || true
@@ -24,5 +24,5 @@ done
 
 
 docker rmi openv2x/lidar:latest 2>/dev/null || true
-docker build -f Dockerfile -t openv2x/lidar:latest .
+docker build --no-cache --force-rm -f Dockerfile -t openv2x/lidar:latest .
 docker-compose up -d

@@ -1,12 +1,10 @@
 import asyncio
 import multiprocessing
 import socket
-import time
 from multiprocessing import Process, Queue
 from typing import Dict
 
 from redis_connect import redis_conn
-from worker import parses
 
 queue: multiprocessing.Queue = Queue()
 data_dict: Dict[str, list] = {}
@@ -26,31 +24,26 @@ class MyUDP:
 
 def deal_parse(addr, data):
     ip = addr[0]
-    if ip not in data_dict:
-        data_dict[ip] = []
-    if data == b"1111":
-        data_dict[ip] = []
-        redis_conn.delete(ip)
+    if data == b"clear":
+        data_dict[ip].clear()
         return
-    data_dict[ip].append(data.hex())
+    if ip not in data_dict:
+        data_dict[ip] = list()
+    data_dict[ip].append(data)
     if len(data_dict[ip]) == 180:
-        data_list = data_dict.get(ip)
-        key = time.time()
-        if redis_conn.llen(ip) + 1 > 1500:
-            print("超过队列", flush=True)
+        if redis_conn.llen(ip) + 1 > 500:
             redis_conn.rpop(ip)
-        redis_conn.lpush(ip, key)
-        parses.apply_async((data_list, key))
-        data_dict[ip] = []
+        data = b"".join(data_dict[ip])
+        redis_conn.lpush(ip, data)
+        data_dict[ip].clear()
 
 
 def deal_handle(queue):
     while True:
         try:
             addr, data = queue.get()
-            if not data:
-                continue
-            deal_parse(addr, data)
+            if data:
+                deal_parse(addr, data)
         except Exception as e:
             print("deal error", e, flush=True)
 
@@ -58,7 +51,7 @@ def deal_handle(queue):
 async def read_data(sock, queue):
     while True:
         try:
-            data, addr = sock.recvfrom(1024 * 5)  # 返回数据和接入连接的（服务端）地址
+            data, addr = sock.recvfrom(1024 * 10)  # 返回数据和接入连接的（服务端）地址
             queue.put((addr, data))
         except Exception as e:
             print("read data error", e, flush=True)
