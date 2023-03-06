@@ -25,6 +25,8 @@ class ConnectionManager:
         if ip in self.active_connections:
             if websocket in self.active_connections[ip]:
                 self.active_connections[ip].remove(websocket)
+            if not self.active_connections[ip]:
+                self.active_connections.pop(ip)
 
     async def send_personal_message(self, message: list, websocket: WebSocket):
         await websocket.send_json(message)
