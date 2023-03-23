@@ -9,4 +9,9 @@ scikit-image
 tqdm
 torchvision
 SharedArray
-opencv-python
+opencv-python-headless
+redis
+fastapi
+fastapi_utils
+websockets
+uvicorn
