@@ -1,3 +1,4 @@
+
 CLASS_NAMES: ['Car', 'Pedestrian','Truck','Cyclist','Bus','Smallbus','Engineeringtruck','Trimotorcycle']
 
 DATA_CONFIG: 
