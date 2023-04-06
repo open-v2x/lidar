@@ -1,8 +1,7 @@
-
-CLASS_NAMES: ['Car', 'Pedestrian','Truck','Cyclist','Bus','Smallbus','Engineeringtruck','Trimotorcycle']
+CLASS_NAMES: ['Car', 'Pedestrian', 'Cyclist']
 
 DATA_CONFIG: 
-    _BASE_CONFIG_: tools/cfgs/dataset_configs/my_dataset.yaml
+    _BASE_CONFIG_: ./kitti_dataset.yaml
 
 
 MODEL:
