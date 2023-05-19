@@ -35,14 +35,14 @@ RUN wget https://jaist.dl.sourceforge.net/project/boost/boost/1.68.0/boost_1_68_
     rm -rf ./boost_1_68_0 && \
     rm -rf ./boost_1_68_0.tar.gz 
 
-RUN pip install spconv-cu113 -i https://pypi.tuna.tsinghua.edu.cn/simple
+RUN pip install spconv-cu113
 
 ARG TORCH_CUDA_ARCH_LIST="5.2 6.0 6.1 7.0 7.5+PTX"
 
 COPY openpcdet /root/OpenPCDet/
 
 RUN cd /root/OpenPCDet &&\
-    pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple &&\
+    pip install -r requirements.txt &&\
     python setup.py develop
 
 WORKDIR /root/OpenPCDet/
