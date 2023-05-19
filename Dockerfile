@@ -1,29 +1,53 @@
-FROM ubuntu:22.04
+FROM nvidia/cuda:11.3.0-cudnn8-devel-ubuntu18.04
 
-ARG GIT_BRANCH
-ARG GIT_COMMIT
-ARG RELEASE_VERSION
-ARG REPO_URL
+ENV DEBIAN_FRONTEND=noninteractive
+ENV PYTHONPATH=/root/OpenPCDet:$PYTHONPATH
 
-LABEL lidar.build_branch=${GIT_BRANCH} \
-      lidar.build_commit=${GIT_COMMIT} \
-      lidar.release_version=${RELEASE_VERSION} \
-      lidar.repo_url=${REPO_URL}
+# To fix GPG key error when running apt-get update
+RUN apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/3bf863cc.pub
+RUN apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1804/x86_64/7fa2af80.pub
 
-WORKDIR /lidar
+# Install basics
+RUN apt-get update -y \
+    && apt-get install build-essential \
+    && apt-get install -y vim apt-utils apt-transport-https git curl ca-certificates bzip2 tree htop wget gnupg ninja-build cmake\
+    && apt-get install -y libglib2.0-0 libsm6 libxext6 libxrender-dev libboost-dev libgl1-mesa-glx bmon iotop g++ python3.8 python3.8-dev python3.8-distutils
 
-ENV PYTHONDONTWRITEBYTECODE 1
-ENV PYTHONUNBUFFERED 1
+# Install python
+RUN ln -sv /usr/bin/python3.8 /usr/bin/python
+RUN wget https://bootstrap.pypa.io/get-pip.py && \
+	python get-pip.py && \
+	rm get-pip.py
 
-RUN apt-get update && apt-get install -y python3-pip && pip3 install --upgrade pip \
-    && apt-get install -y wget
+# Install torch and torchvision
+# See https://pytorch.org/ for other options if you use a different version of CUDA
+RUN pip install torch==1.12.1+cu113 torchvision==0.13.1+cu113 -f https://download.pytorch.org/whl/torch_stable.html
 
-COPY requirements.txt .
-RUN pip3 install -r requirements.txt
+# Install python packages
+RUN pip install numpy llvmlite numba tensorboardX easydict pyyaml scikit-image tqdm six -i https://pypi.tuna.tsinghua.edu.cn/simple
 
-RUN wget https://openv2x.oss-ap-southeast-1.aliyuncs.com/data/lidar/velo.tar.gz \
-    && tar zxvf velo.tar.gz \
-    && rm -rf velo.tar.gz
+WORKDIR /root
 
+# Install Boost geometry
+RUN wget https://jaist.dl.sourceforge.net/project/boost/boost/1.68.0/boost_1_68_0.tar.gz && \
+    tar xzvf boost_1_68_0.tar.gz && \
+    cp -r ./boost_1_68_0/boost /usr/include && \
+    rm -rf ./boost_1_68_0 && \
+    rm -rf ./boost_1_68_0.tar.gz 
 
-COPY project .
+RUN pip install spconv-cu113 -i https://pypi.tuna.tsinghua.edu.cn/simple
+
+ARG TORCH_CUDA_ARCH_LIST="5.2 6.0 6.1 7.0 7.5+PTX"
+
+COPY openpcdet /root/OpenPCDet/
+
+RUN cd /root/OpenPCDet &&\
+    pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple &&\
+    python setup.py develop
+
+WORKDIR /root/OpenPCDet/
+# RUN echo 'export PYTHONPATH=/root/OpenPCDet:$PYTHONPATH' >>~/.bashrc
+
+EXPOSE 28300
+
+CMD ["sh", "/root/OpenPCDet/start.sh"]

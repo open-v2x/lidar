@@ -27,7 +27,6 @@ class ConnectionManager:
         await websocket.send_json(message)
 
     async def broadcast(self, message, ip: str):
-        print(self.active_connections)
         for connection in self.active_connections.get(ip, []):
             try:
                 await connection.send_json(message)

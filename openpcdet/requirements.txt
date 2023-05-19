@@ -15,3 +15,4 @@ fastapi
 fastapi_utils
 websockets
 uvicorn
+paho-mqtt

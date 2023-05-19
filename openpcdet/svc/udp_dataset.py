@@ -1,3 +1,4 @@
+from config import cfgs
 from pcdet.datasets import DatasetTemplate
 
 
@@ -35,16 +36,17 @@ class DataParse:
         self,
     ):
         self.data_dict = {}
+        self.total_lens = cfgs.udp.get("total_lens")
 
     def parse(self, addr, udp_pcd):
         ip = addr[0]
-        if udp_pcd == b"clear":
+        if ip not in self.data_dict:
+            self.data_dict[ip] = bytearray()
+        if udp_pcd == b"end":
             self.data_dict[ip].clear()
             return
-        if ip not in self.data_dict:
-            self.data_dict[ip] = list()
-        self.data_dict[ip].append(udp_pcd)
-        if len(self.data_dict[ip]) == 180:
-            data = b"".join(self.data_dict[ip])
-            self.data_dict[ip].clear()
+        self.data_dict[ip] += udp_pcd
+        if len(self.data_dict[ip]) >= self.total_lens:
+            data = self.data_dict[ip][: self.total_lens].copy()
+            self.data_dict[ip] = self.data_dict[ip][self.total_lens :]
             return data

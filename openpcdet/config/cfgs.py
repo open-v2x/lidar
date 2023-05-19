@@ -10,7 +10,8 @@ DEFAULT_WS_HOST = "127.0.0.1"
 DEFAULT_WS_PORT = 28300
 
 # default mqtt config
-DEFAULT_MQTT_USERNAME = "admin"
+DEFAULT_MQTT_HOST = "127.0.0.1"
+DEFAULT_MQTT_USERNAME = "root"
 DEFAULT_MQTT_PASSWORD = "password"
 DEFAULT_MQTT_PORT = 1883
 
@@ -37,8 +38,8 @@ websocket = {
 }
 
 mqtt = {
-    "host": os.getenv("mqtt_host") or DEFAULT_WS_HOST,
-    "port": os.getenv("mqtt_port") or DEFAULT_WS_PORT,
+    "host": os.getenv("mqtt_host") or DEFAULT_MQTT_HOST,
+    "port": os.getenv("mqtt_port") or DEFAULT_MQTT_PORT,
     "username": os.getenv("mqtt_username") or DEFAULT_MQTT_USERNAME,
     "password": os.getenv("mqtt_password") or DEFAULT_MQTT_PASSWORD,
     "topic": "V2X/DEVICE/LIDAR/PARTICIPANT",
@@ -48,6 +49,9 @@ udp = {
     "host": os.getenv("udp_host") or DEFAULT_UDP_HOST,
     "port": os.getenv("udp_port") or DEFAULT_UDP_PORT,
     "dir_path": os.getenv("dir_path") or DEFAULT_DATA_PATH,
+    "total_lens": int(os.getenv("total_lens", 180 * 10240)),
+    "packet_number": int(os.getenv("packet_number", 180)),
+    "packet_lens": int(os.getenv("packet_lens", 10240)),
 }
 
 
