@@ -13,7 +13,7 @@ class Inference:
     # initialize model
     def __init__(self):
         self.cfg_file = cfgs.cfg_file.get("cfg_file")
-        self.ckpt = cfgs.cfg_file.get("ckpt")
+        self.ckpt = cfgs.ckpt.get("ckpt")
         self.logger = common_utils.create_logger()
         self.cfg = cfg_from_yaml_file(self.cfg_file, config)
         self.init_dataset = UDPDataset(

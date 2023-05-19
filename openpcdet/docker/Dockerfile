@@ -1,6 +1,7 @@
 FROM nvidia/cuda:11.3.0-cudnn8-devel-ubuntu18.04
 
 ENV DEBIAN_FRONTEND=noninteractive
+ENV PYTHONPATH=/root/OpenPCDet:$PYTHONPATH
 
 # To fix GPG key error when running apt-get update
 RUN apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/3bf863cc.pub
@@ -45,7 +46,7 @@ RUN cd /root/OpenPCDet &&\
     python setup.py develop
 
 WORKDIR /root/OpenPCDet/
-RUN echo 'export PYTHONPATH=/root/OpenPCDet:$PYTHONPATH' >>~/.bashrc
+# RUN echo 'export PYTHONPATH=/root/OpenPCDet:$PYTHONPATH' >>~/.bashrc
 
 EXPOSE 28300
 

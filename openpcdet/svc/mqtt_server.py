@@ -42,5 +42,5 @@ def connect() -> None:
     _client.on_connect = _on_connect
     _client.on_message = _on_message
     _client.on_disconnect = _on_disconnect
-    _client.connect(cfgs.mqtt.get("host"), cfgs.mqtt.get("port"), 60)
+    _client.connect(cfgs.mqtt.get("host"), int(cfgs.mqtt.get("port")), 60)
     _client.loop_start()

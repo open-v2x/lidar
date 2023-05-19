@@ -1,33 +1,67 @@
+import asyncio
 import glob
 import os
+import sys
 import time
-from socket import AF_INET, SOCK_DGRAM, socket
-from typing import List
+from pathlib import Path
 
+sys.path.append(str(Path(__file__).parent.parent))
 from config import cfgs
 
-if __name__ == "__main__":
 
-    ADDRESS = (cfgs.udp.get("host"), cfgs.udp.get("port"))
-    udp_client = socket(AF_INET, SOCK_DGRAM)
-    dir_path = "velo"  # 指定目录的路径
-    file_extension = "*.bin"  # 指定文件的后缀名
-    file_list = glob.glob(os.path.join(dir_path, file_extension))
-    num_files = len(file_list)  # 获取文件数量
-    file_list.sort(key=lambda x: int(os.path.basename(x).split(".")[0]))
-    data: List = [[] for _ in range(num_files)]
-    for i, filename in enumerate(file_list):
-        with open(f"velo/{filename}", "rb") as f:
-            for _ in range(180):
-                data[i].append(f.read(1024 * 10))
-    while True:
-        try:
-            for udp_data_list in data:
-                for udp_data in udp_data_list:
-                    udp_client.sendto(udp_data, ADDRESS)
-                    time.sleep(0.0001)
-                time.sleep(0.01)
-        except Exception as e:
-            print(e)
-        time.sleep(2)
-        udp_client.sendto(b"clear", ADDRESS)
+class UDPClientProtocol:
+    def __init__(self, on_con_lost):
+        self.on_con_lost = on_con_lost
+        self.transport = None
+
+    def connection_made(self, transport):
+        self.transport = transport
+        packet_number, packet_lens, dir_path = (
+            cfgs.udp.get("packet_number"),
+            cfgs.udp.get("packet_lens"),
+            cfgs.udp.get("dir_path"),
+        )
+        file_extension = "*.bin"  # 指定文件的后缀名
+        file_list = glob.glob(os.path.join(dir_path, file_extension))
+        file_list.sort(key=lambda x: int(os.path.basename(x).split(".")[0]))
+        while True:
+            self.transport.sendto(b"end")
+            for filename in file_list:
+                with open(filename, "rb") as f:
+                    for _ in range(packet_number):
+                        data = f.read(packet_lens)
+                        self.transport.sendto(data)
+                        time.sleep(1e-4)
+                self.transport.sendto(b"end")
+                time.sleep(0.07)
+
+    def datagram_received(self, data, addr):
+        print("Received:", data.decode())
+
+        print("Close the socket")
+        self.transport.close()
+
+    def error_received(self, exc):
+        print("Error received:", exc)
+
+    def connection_lost(self, exc):
+        print("Connection closed")
+        self.on_con_lost.set_result(True)
+
+
+async def main():
+    loop = asyncio.get_running_loop()
+    on_con_lost = loop.create_future()
+
+    transport, protocol = await loop.create_datagram_endpoint(
+        lambda: UDPClientProtocol(on_con_lost),
+        remote_addr=(cfgs.udp.get("host"), cfgs.udp.get("port")),
+    )
+
+    try:
+        await on_con_lost
+    finally:
+        transport.close()
+
+
+asyncio.run(main())
