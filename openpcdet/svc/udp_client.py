@@ -16,10 +16,11 @@ class UDPClientProtocol:
 
     def connection_made(self, transport):
         self.transport = transport
-        packet_number, packet_lens, dir_path = (
+        packet_number, packet_lens, dir_path, sleep_time = (
             cfgs.udp.get("packet_number"),
             cfgs.udp.get("packet_lens"),
             cfgs.udp.get("dir_path"),
+            cfgs.udp.get("sleep_time"),
         )
         file_extension = "*.bin"  # 指定文件的后缀名
         file_list = glob.glob(os.path.join(dir_path, file_extension))
@@ -33,7 +34,7 @@ class UDPClientProtocol:
                         self.transport.sendto(data)
                         time.sleep(1e-4)
                 self.transport.sendto(b"end")
-                time.sleep(0.07)
+                time.sleep(sleep_time)
 
     def datagram_received(self, data, addr):
         print("Received:", data.decode())
