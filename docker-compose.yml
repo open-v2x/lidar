@@ -2,52 +2,26 @@ version: '3.8'
 
 services:
 
-  websocket:
+  openpcdet:
+    runtime: nvidia
     image: openv2x/lidar:latest
-    container_name: lidar_websocket
-    network_mode: host
-    restart: always
-    command: uvicorn main:app --host 0.0.0.0 --port 8000
-    environment:
-      - redis_password=${OPENV2X_REDIS_ROOT}
-      - host=127.0.0.1
-
-  worker:
-    image: openv2x/lidar:latest
-    container_name: celery_worker
-    command: celery worker --app=worker.celery -l info
+    container_name: openpcdet
     network_mode: host
     restart: always
     environment:
-      - CELERY_BROKER_URL=redis://:${OPENV2X_REDIS_ROOT}@127.0.0.1:6379/0
-      - host=127.0.0.1
-      - redis_password=${OPENV2X_REDIS_ROOT}
-    depends_on:
-      - websocket
-
-  udp_server:
-    image: openv2x/lidar:latest
-    container_name: udp_server
-    command: python3 udp_server.py
-    network_mode: host
-    restart: always
-    environment:
-      - CELERY_BROKER_URL=redis://:${OPENV2X_REDIS_ROOT}@127.0.0.1:6379/0
-      - host=127.0.0.1
-      - redis_password=${OPENV2X_REDIS_ROOT}
-    depends_on:
-      - worker
+      - mqtt_host=150.158.47.136
 
   udp_client:
     image: openv2x/lidar:latest
     container_name: udp_client
-    command: python3 udp_client.py
+    command: python /root/OpenPCDet/svc/udp_client.py
     network_mode: host
     restart: always
     environment:
       - udp_host=127.0.0.1
-      - host=127.0.0.1
-      - redis_password=${OPENV2X_REDIS_ROOT}
+      - dir_path=/root/OpenPCDet/data/points
+    volumes:
+      - /home/v2x/velo:/root/OpenPCDet/data/points
     depends_on:
-      - udp_server
+      - openpcdet
 
