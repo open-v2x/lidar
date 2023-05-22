@@ -24,7 +24,7 @@ RUN wget https://bootstrap.pypa.io/get-pip.py && \
 RUN pip install torch==1.12.1+cu113 torchvision==0.13.1+cu113 -f https://download.pytorch.org/whl/torch_stable.html
 
 # Install python packages
-RUN pip install numpy llvmlite numba tensorboardX easydict pyyaml scikit-image tqdm six -i https://pypi.tuna.tsinghua.edu.cn/simple
+RUN pip install numpy llvmlite numba tensorboardX easydict pyyaml scikit-image tqdm six
 
 WORKDIR /root
 
