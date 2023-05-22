@@ -52,6 +52,7 @@ udp = {
     "total_lens": int(os.getenv("total_lens", 180 * 10240)),
     "packet_number": int(os.getenv("packet_number", 180)),
     "packet_lens": int(os.getenv("packet_lens", 10240)),
+    "sleep_time": float(os.getenv("sleep_time", 0.2)),
 }
 
 
