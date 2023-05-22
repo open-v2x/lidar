@@ -1,5 +1,8 @@
 import json
+import math
+from typing import Dict
 
+import pandas as pd
 import torch
 from config import cfgs
 from pcdet.config import cfg as config, cfg_from_yaml_file
@@ -30,6 +33,15 @@ class Inference:
         self.model.load_params_from_file(filename=self.ckpt, logger=self.logger, to_cpu=False)
         self.model.cuda()
         self.model.eval()
+        self.lidar_info: Dict[str, dict] = {
+            "lidar1": {
+                "bias_x": 888,
+                "bias_y": 499,
+                "rotation": 0.0,
+                "reverse": True,
+                "scale": 0.9,
+            }
+        }
 
     async def run(self, points):
         with torch.no_grad():
@@ -56,11 +68,28 @@ class Inference:
                 # pred_dicts[0]["pred_scores"] = pred_dicts[0]["pred_scores"][inds]
                 pred_dicts[0]["pred_labels"] = pred_dicts[0]["pred_labels"][inds]
 
+            lidar_points = pred_dicts[0]["pred_boxes"].cpu().numpy()
+            # 将NumPy数组转换为DataFrame
+            df = pd.DataFrame(lidar_points, columns=["x", "y", "z", "dx", "dy", "dz", "angle"])
+            df.apply(self.convert_for_visual, args=("lidar1",), axis=1)
+            pixel_points = df.iloc[:, :2].values.tolist()
+
             bbox_data = {
-                "bboxes": pred_dicts[0]["pred_boxes"].cpu().numpy().tolist(),
+                "bboxes": pixel_points,
                 # "scores": pred_dicts[0]["pred_scores"].cpu().numpy().tolist(),
                 "labels": pred_dicts[0]["pred_labels"].cpu().numpy().tolist(),
             }
             result = json.dumps(bbox_data)
             self.logger.info("Inference done.")
             return result
+
+    def convert_for_visual(self, frame, lidar_id) -> None:
+        """Coordinate translation and rotation."""
+        k = -1 if self.lidar_info[lidar_id]["reverse"] else 1
+        x = frame["x"] + self.lidar_info[lidar_id]["bias_x"]
+        y = k * (frame["y"] - self.lidar_info[lidar_id]["bias_y"])
+        rotation = math.radians(self.lidar_info[lidar_id]["rotation"])
+        new_x = x * math.cos(rotation) - y * math.sin(rotation)
+        new_y = x * math.sin(rotation) + y * math.cos(rotation)
+        frame["x"] = int(new_x / self.lidar_info[lidar_id]["scale"])
+        frame["y"] = int(new_y / self.lidar_info[lidar_id]["scale"])
