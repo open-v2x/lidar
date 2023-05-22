@@ -23,6 +23,7 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v3
         with:
+          tool-cache: true
           context: .
           platforms: linux/amd64,linux/arm64
           push: true
