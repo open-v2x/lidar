@@ -58,7 +58,7 @@ class UDPProtocol(asyncio.DatagramProtocol):
 async def on_startup() -> None:
     transport, protocol = await asyncio.get_running_loop().create_datagram_endpoint(
         lambda: UDPProtocol(),
-        local_addr=(cfgs.udp.get("host"), cfgs.udp.get("port")),
+        local_addr=("0.0.0.0", cfgs.udp.get("port")),
         family=socket.AF_INET,
     )
     app.state.udp_transport = transport
