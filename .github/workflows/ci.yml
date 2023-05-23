@@ -67,7 +67,7 @@ jobs:
         with:
           host: ${{ secrets.V2XLAB_HOST }}
           username: ${{ secrets.V2XLAB_USERNAME }}
-          password: ${{ secrets.V2XLAB_PASSWORD }}
+          key: ${{ secrets.V2XLAB_KEY }}
           port: ${{ secrets.V2XLAB_PORT }}
           script: |
             set -e
@@ -81,7 +81,7 @@ jobs:
             docker rmi registry.cn-shanghai.aliyuncs.com/openv2x/lidar:latest || true
             docker pull registry.cn-shanghai.aliyuncs.com/openv2x/lidar:latest
             nvidia-docker run --name openpcdet -d --restart=always -e mqtt_host=47.100.126.13 -e mqtt_password=$mqtt_password -p 28300:28300 -p 57142:57142 --net=host --gpus all registry.cn-shanghai.aliyuncs.com/openv2x/lidar:latest
-            docker run --name udp_client -d --restart=always -e udp_host=127.0.0.1  -v /home/v2x/CaaS/datasets/points:/root/OpenPCDet/data/points -e dir_path= /root/OpenPCDet/data/points --net=host registry.cn-shanghai.aliyuncs.com/openv2x/lidar:latest python /root/OpenPCDet/svc/udp_client.py
+            docker run --name udp_client -d --restart=always -e udp_host=127.0.0.1  -v /home/v2x/CaaS/datasets/points:/root/OpenPCDet/data/points -e dir_path=/root/OpenPCDet/data/points --net=host registry.cn-shanghai.aliyuncs.com/openv2x/lidar:latest python /root/OpenPCDet/svc/udp_client.py
 
   aio-master-ssh:
     needs: acr
