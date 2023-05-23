@@ -42,7 +42,7 @@ ARG TORCH_CUDA_ARCH_LIST="5.2 6.0 6.1 7.0 7.5+PTX"
 COPY openpcdet /root/OpenPCDet/
 
 RUN cd /root/OpenPCDet &&\
-    pip install -r requirements.txt &&\
+    pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple &&\
     python setup.py develop
 
 WORKDIR /root/OpenPCDet/
