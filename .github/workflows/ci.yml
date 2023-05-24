@@ -67,7 +67,7 @@ jobs:
         with:
           host: ${{ secrets.V2XLAB_HOST }}
           username: ${{ secrets.V2XLAB_USERNAME }}
-          key: ${{ secrets.V2XLAB_KEY }}
+          password: ${{ secrets.V2XLAB_PASSWORD }}
           port: ${{ secrets.V2XLAB_PORT }}
           script: |
             set -e
