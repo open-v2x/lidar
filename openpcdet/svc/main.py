@@ -1,8 +1,10 @@
 import asyncio
 import socket
+import time
 from typing import Tuple
 
 import numpy as np
+import pandas as pd
 import uvicorn
 from config import cfgs
 from fastapi import FastAPI, WebSocket
@@ -36,7 +38,9 @@ async def websocket_endpoint(websocket: WebSocket, ip: str):
 async def send_points(points, addr):
     points = (points[..., :3] * (-1000)).astype(int)
     points[:, 1] = points[:, 1] * (-1)
-    await manager.broadcast(points.flatten().tolist(), addr[0])
+    df = pd.DataFrame(points)
+    df.drop_duplicates(inplace=True)
+    await manager.broadcast(df.stack().tolist(), addr[0])
 
 
 class UDPProtocol(asyncio.DatagramProtocol):
@@ -68,8 +72,9 @@ async def on_startup() -> None:
 async def main(points):
     result = await inference.run(points=points)
     # send result to mqtt
-    mqtt_client = get_mqtt_client()
-    mqtt_client.publish(cfgs.mqtt.get("topic"), result)
+    if result:
+        mqtt_client = get_mqtt_client()
+        mqtt_client.publish(cfgs.mqtt.get("topic"), result)
 
 
 if __name__ == "__main__":
