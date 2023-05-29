@@ -1,6 +1,5 @@
 import asyncio
 import socket
-import time
 from typing import Tuple
 
 import numpy as np
@@ -36,7 +35,7 @@ async def websocket_endpoint(websocket: WebSocket, ip: str):
 
 
 async def send_points(points, addr):
-    points = (points[..., :3] * (-1000)).astype(int)
+    points = (points[..., :3] * (-500)).astype(int)
     points[:, 1] = points[:, 1] * (-1)
     df = pd.DataFrame(points)
     df.drop_duplicates(inplace=True)

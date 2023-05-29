@@ -72,7 +72,7 @@ class Inference:
             lidar_points = pred_dicts[0]["pred_boxes"].cpu().numpy()
             # 将NumPy数组转换为DataFrame
             df = pd.DataFrame(lidar_points, columns=["x", "y", "z", "dx", "dy", "dz", "angle"])
-            df.apply(self.convert_for_visual, args=("lidar1",), axis=1)
+            df = df.apply(self.convert_for_visual, args=("lidar1",), axis=1)
             pixel_points = df.iloc[:, [0, 1, 6]].values.tolist()
 
             bbox_data = {
@@ -97,3 +97,4 @@ class Inference:
         )
         frame["x"] = frame["x"] / self.lidar_info[lidar_id]["scale"]
         frame["y"] = frame["y"] / self.lidar_info[lidar_id]["scale"]
+        return frame
