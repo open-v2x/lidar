@@ -39,7 +39,8 @@ class Inference:
                 "bias_y": 499,
                 "rotation": 0.0,
                 "reverse": True,
-                "scale": 0.9,
+                "scale": 1.2,
+                "focal_length": 25,
             }
         }
 
@@ -72,7 +73,7 @@ class Inference:
             # 将NumPy数组转换为DataFrame
             df = pd.DataFrame(lidar_points, columns=["x", "y", "z", "dx", "dy", "dz", "angle"])
             df.apply(self.convert_for_visual, args=("lidar1",), axis=1)
-            pixel_points = df.iloc[:, :2].values.tolist()
+            pixel_points = df.iloc[:, [0, 1, 6]].values.tolist()
 
             bbox_data = {
                 "bboxes": pixel_points,
@@ -86,10 +87,14 @@ class Inference:
     def convert_for_visual(self, frame, lidar_id) -> None:
         """Coordinate translation and rotation."""
         k = -1 if self.lidar_info[lidar_id]["reverse"] else 1
-        x = frame["x"] + self.lidar_info[lidar_id]["bias_x"]
-        y = k * (frame["y"] - self.lidar_info[lidar_id]["bias_y"])
-        rotation = math.radians(self.lidar_info[lidar_id]["rotation"])
-        new_x = x * math.cos(rotation) - y * math.sin(rotation)
-        new_y = x * math.sin(rotation) + y * math.cos(rotation)
-        frame["x"] = int(new_x / self.lidar_info[lidar_id]["scale"])
-        frame["y"] = int(new_y / self.lidar_info[lidar_id]["scale"])
+        frame["x"] = (
+            k * frame["x"] * self.lidar_info[lidar_id]["focal_length"] / frame["z"]
+            + self.lidar_info[lidar_id]["bias_x"]
+        )
+        frame["y"] = (
+            frame["y"] * self.lidar_info[lidar_id]["focal_length"] / frame["z"]
+            + self.lidar_info[lidar_id]["bias_y"]
+        )
+        frame["x"] = frame["x"] / self.lidar_info[lidar_id]["scale"]
+        frame["y"] = frame["y"] / self.lidar_info[lidar_id]["scale"]
+        frame["angle"] = frame["angle"] + np.radians(90)
