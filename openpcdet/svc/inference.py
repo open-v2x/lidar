@@ -97,4 +97,3 @@ class Inference:
         )
         frame["x"] = frame["x"] / self.lidar_info[lidar_id]["scale"]
         frame["y"] = frame["y"] / self.lidar_info[lidar_id]["scale"]
-        frame["angle"] = frame["angle"] + np.radians(90)
