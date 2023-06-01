@@ -3,7 +3,7 @@ name: ci
 on:
   push:
     branches:
-      - master
+      - columbia
 
 jobs:
   docker:
@@ -32,7 +32,7 @@ jobs:
           context: .
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: openv2x/lidar:latest
+          tags: openv2x/lidar:columbia
           build-args: |
             GIT_BRANCH=${{ github.ref_name }}
             REPO_URL=https://github.com/open-v2x/lidar
@@ -54,9 +54,9 @@ jobs:
             set -e
 
             (docker images | grep none | awk '{print $3}' | xargs -I{} docker rmi -f {}) || true
-            docker pull openv2x/lidar:latest
-            docker tag openv2x/lidar:latest registry.cn-shanghai.aliyuncs.com/openv2x/lidar:latest
-            docker push registry.cn-shanghai.aliyuncs.com/openv2x/lidar:latest
+            docker pull openv2x/lidar:columbia
+            docker tag openv2x/lidar:columbia registry.cn-shanghai.aliyuncs.com/openv2x/lidar:columbia
+            docker push registry.cn-shanghai.aliyuncs.com/openv2x/lidar:columbia
 
   ssh:
     needs: acr
@@ -79,10 +79,10 @@ jobs:
               docker rm $i 2>/dev/null || true
             done
 
-            docker rmi registry.cn-shanghai.aliyuncs.com/openv2x/lidar:latest || true
-            docker pull registry.cn-shanghai.aliyuncs.com/openv2x/lidar:latest
-            nvidia-docker run --name openpcdet -d --restart=always -e mqtt_host=${{ secrets.MQTT_HOST }} -e mqtt_password=${{ secrets.MQTT_PASSWORD }} -p 28300:28300 -p 57142:57142 --net=host --gpus all registry.cn-shanghai.aliyuncs.com/openv2x/lidar:latest
-            docker run --name udp_client -d --restart=always -e udp_host=127.0.0.1  -v /home/v2x/CaaS/datasets/points:/root/OpenPCDet/data/points -e dir_path=/root/OpenPCDet/data/points --net=host registry.cn-shanghai.aliyuncs.com/openv2x/lidar:latest python /root/OpenPCDet/svc/udp_client.py
+            docker rmi registry.cn-shanghai.aliyuncs.com/openv2x/lidar:columbia || true
+            docker pull registry.cn-shanghai.aliyuncs.com/openv2x/lidar:columbia
+            nvidia-docker run --name openpcdet -d --restart=always -e mqtt_host=${{ secrets.MQTT_HOST }} -e mqtt_password=${{ secrets.MQTT_PASSWORD }} -p 28300:28300 -p 57142:57142 --net=host --gpus all registry.cn-shanghai.aliyuncs.com/openv2x/lidar:columbia
+            docker run --name udp_client -d --restart=always -e udp_host=127.0.0.1  -v /home/v2x/CaaS/datasets/points:/root/OpenPCDet/data/points -e dir_path=/root/OpenPCDet/data/points --net=host registry.cn-shanghai.aliyuncs.com/openv2x/lidar:columbia python /root/OpenPCDet/svc/udp_client.py
 
   aio-master-ssh:
     needs: acr
@@ -91,14 +91,14 @@ jobs:
       - name: apply to aio env
         uses: appleboy/ssh-action@master
         with:
-          host: ${{ secrets.AIO_MASTER_HOST }}
-          username: ${{ secrets.AIO_MASTER_USERNAME }}
-          key: ${{ secrets.AIO_MASTER_KEY }}
-          port: ${{ secrets.AIO_MASTER_PORT }}
+          host: ${{ secrets.AIO_ALBANY_HOST }}
+          username: ${{ secrets.AIO_ALBANY_USERNAME }}
+          key: ${{ secrets.AIO_ALBANY_KEY }}
+          port: ${{ secrets.AIO_ALBANY_PORT }}
           script: |
             set -e
 
-            rm -rf openv2x-aio-master.tar.gz && wget https://openv2x.oss-ap-southeast-1.aliyuncs.com/deploy/master/openv2x-aio-master.tar.gz
-            rm -rf src && tar zxvf openv2x-aio-master.tar.gz
+            rm -rf openv2x-aio-columbia.tar.gz && wget https://openv2x.oss-ap-southeast-1.aliyuncs.com/deploy/master/openv2x-aio-columbia.tar.gz
+            rm -rf src && tar zxvf openv2x-aio-columbia.tar.gz
             cd src
             sh install.sh
