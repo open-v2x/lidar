@@ -40,7 +40,7 @@ class Inference:
                 "rotation": 0.0,
                 "reverse": True,
                 "scale": 1.2,
-                "focal_length": 25,
+                "focal_length": 15,
             }
         }
 
@@ -88,11 +88,11 @@ class Inference:
         """Coordinate translation and rotation."""
         k = -1 if self.lidar_info[lidar_id]["reverse"] else 1
         frame["x"] = (
-            k * frame["x"] * self.lidar_info[lidar_id]["focal_length"] / frame["z"]
+            frame["x"] * self.lidar_info[lidar_id]["focal_length"]
             + self.lidar_info[lidar_id]["bias_x"]
         )
         frame["y"] = (
-            frame["y"] * self.lidar_info[lidar_id]["focal_length"] / frame["z"]
+            k * frame["y"] * self.lidar_info[lidar_id]["focal_length"]
             + self.lidar_info[lidar_id]["bias_y"]
         )
         frame["x"] = frame["x"] / self.lidar_info[lidar_id]["scale"]
