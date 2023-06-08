@@ -32,7 +32,7 @@ class UDPClientProtocol:
                     for _ in range(packet_number):
                         data = f.read(packet_lens)
                         self.transport.sendto(data)
-                        time.sleep(1e-4)
+                        time.sleep(1e-3)
                 self.transport.sendto(b"end")
                 time.sleep(sleep_time)
 
