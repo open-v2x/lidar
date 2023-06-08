@@ -1,5 +1,6 @@
 from typing import Dict
 
+import ujson
 from fastapi import WebSocket
 from starlette.websockets import WebSocketDisconnect
 from websockets.exceptions import ConnectionClosedError, ConnectionClosedOK
@@ -27,8 +28,9 @@ class ConnectionManager:
         await websocket.send_json(message)
 
     async def broadcast(self, message, ip: str):
+        data = ujson.dumps(message, separators=(",", ":"))
         for connection in self.active_connections.get(ip, []):
             try:
-                await connection.send_json(message)
+                await connection.send_json(data)
             except (ConnectionClosedError, ConnectionClosedOK, WebSocketDisconnect):
                 self.disconnect(connection, ip)
