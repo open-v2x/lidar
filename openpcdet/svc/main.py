@@ -85,13 +85,11 @@ async def udp_server(queue):
 
 
 async def main(points):
-    t = time.time()
     result = await app.state.inference.run(points=points)
     # send result to mqtt
     if result:
         mqtt_client = get_mqtt_client()
         mqtt_client.publish(cfgs.mqtt.get("topic"), result)
-    print(time.time() - t)
 
 
 def start_udp_server(queue):
