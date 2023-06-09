@@ -31,6 +31,6 @@ class ConnectionManager:
         data = ujson.dumps(message, separators=(",", ":"))
         for connection in self.active_connections.get(ip, []):
             try:
-                await connection.send_json(data)
+                await connection.send_text(data)
             except (ConnectionClosedError, ConnectionClosedOK, WebSocketDisconnect):
                 self.disconnect(connection, ip)
