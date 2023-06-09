@@ -17,3 +17,4 @@ websockets
 uvicorn
 paho-mqtt
 pandas
+ujson
