@@ -1,3 +1,4 @@
+import gzip
 from typing import Dict
 
 import ujson
@@ -29,6 +30,7 @@ class ConnectionManager:
 
     async def broadcast(self, message, ip: str):
         data = ujson.dumps(message, separators=(",", ":"))
+        data = gzip.compress(data.encode(), compresslevel=1)
         for connection in self.active_connections.get(ip, []):
             try:
                 await connection.send_text(data)
