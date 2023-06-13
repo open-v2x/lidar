@@ -70,15 +70,24 @@ class Inference:
                 pred_dicts[0]["pred_labels"] = pred_dicts[0]["pred_labels"][inds]
 
             lidar_points = pred_dicts[0]["pred_boxes"].cpu().numpy()
+            lidar_labels = pred_dicts[0]["pred_labels"].cpu().numpy()
             # 将NumPy数组转换为DataFrame
-            df = pd.DataFrame(lidar_points, columns=["x", "y", "z", "dx", "dy", "dz", "angle"])
+            df_points = pd.DataFrame(
+                lidar_points, columns=["x", "y", "z", "dx", "dy", "dz", "angle"]
+            )
+            df_lables = pd.DataFrame(lidar_labels, columns=["lables"])
+            df = pd.concat([df_points, df_lables], axis=1)
             df = df.apply(self.convert_for_visual, args=("lidar1",), axis=1)
+            # 根据场景范围、目标尺寸、目标位置、目标速度等因素进行过滤
+            df = df[df["y"].between(400, 1300) | df["x"].between(500, 1300)]
             pixel_points = df.iloc[:, [0, 1, 6]].values.tolist()
+            pixel_labels = df.iloc[:, 7].tolist()
 
             bbox_data = {
                 "bboxes": pixel_points,
                 # "scores": pred_dicts[0]["pred_scores"].cpu().numpy().tolist(),
-                "labels": pred_dicts[0]["pred_labels"].cpu().numpy().tolist(),
+                # "labels": pred_dicts[0]["pred_labels"].cpu().numpy().tolist(),
+                "labels": pixel_labels,
             }
             result = json.dumps(bbox_data)
             self.logger.info("Inference done.")
